@@ -27,6 +27,8 @@ namespace Flashcards21.Views
             string filename = "";
             if (NavigationContext.QueryString.TryGetValue("selectedItem", out filename))
             {
+                //Jedes GUI Objekt hat ein Property DataContext, darauf wird ein Objekt geholt und auf diesem dann ein Property name geholt
+                //Binding von View zu ViewModel
                 DataContext = new CardboxViewModel(filename);
                 _cardbox = DataContext as CardboxViewModel;
                 _cardbox.PropertyChanged += PositionChangedHandler;
