@@ -24,6 +24,7 @@ namespace Flashcards21.ViewModels
 {
     public class DownloadViewModel : INotifyPropertyChanged
     {
+        //test comment
         private const string index = "index.xml";
         Downloader downloader;
 
