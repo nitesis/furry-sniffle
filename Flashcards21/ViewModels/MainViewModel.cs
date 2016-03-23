@@ -59,17 +59,17 @@ namespace Flashcards21
              this.Items.Add(new ItemViewModel() { Title = "cardbox fifteen", Filename = "Habitant inceptos interdum lobortis", Description = "Accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos interdum lobortis nascetur pharetra placerat" });
             */
 
-            /*IsolatedStorageSettings localStorage = IsolatedStorageSettings.ApplicationSettings;
-            List<DownloadableItemViewModel> itemList = new List<DownloadableItemViewModel>();*/
+            IsolatedStorageSettings localStorage = IsolatedStorageSettings.ApplicationSettings;
+            List<DownloadableItemViewModel> itemList = new List<DownloadableItemViewModel>();
 
             //Wenn nichts gespeichert ist, da wird auch nichts gemacht
-           // if (!localStorage.Contains("Items"))
-          //  {
+            if (!localStorage.Contains("Items"))
+            {
                 this.Items.Add(new ItemViewModel() { Title = "cardbox fourteen", Filename = "Dictumst eleifend facilisi faucibus", Description = "Pharetra placerat pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent" });
                 this.Items.Add(new ItemViewModel() { Title = "cardbox fifteen", Filename = "Habitant inceptos interdum lobortis", Description = "Accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos interdum lobortis nascetur pharetra placerat" });
 
-           // }
-           /* else
+            }
+            else
             {
 
                 itemList = IsolatedStorageSettings.ApplicationSettings["Items"]
@@ -80,9 +80,9 @@ namespace Flashcards21
                     this.Items.Add(new ItemViewModel() { Title = item.Title, Filename = "huhu", Description = item.Description });
           
                 }
-            }*/
+            }
 
-            //localStorage.Save();
+            localStorage.Save();
             //this.Items.Add(new ItemViewModel() { Title = "cardbox sixteen", Filename = "Nascetur pharetra placerat pulvinar", Description = "Pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent accumsan bibendum" });
 
             this.IsDataLoaded = true;

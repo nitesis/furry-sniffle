@@ -27,8 +27,25 @@ namespace Flashcards21.Views
 
         private void selectionChanged(object sender, SelectionChangedEventArgs e)
         {
+       
+        
+            // If selected index is -1 (no selection) do nothing
+            if (DownloadListBox.SelectedIndex != -1)
+            {
+                string destinationPage = "/Views/DownloadPage.xaml";
+                int chosenCardboxID = DownloadListBox.SelectedIndex;
 
-        }
+
+                download.download(chosenCardboxID);
+
+                // Navigate to the new page
+                // NavigationService.Navigate(new Uri(destinationPage + "?selectedItem=" + chosenCardbox, UriKind.Relative));
+
+                // Reset selected index to -1 (no selection)
+                // MainListBox.SelectedIndex = -1;
+            }
+        
+    }
 
         private void DownloadableCardboxes_Loaded(object sender, RoutedEventArgs e)
         {

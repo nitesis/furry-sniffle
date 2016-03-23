@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
+<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2014/deployment" AppPlatformVersion="8.1">
   <DefaultLanguage xmlns="" code="" />
   <App xmlns="" ProductID="{d1953b78-015d-4167-a889-4d9bf4862292}" Title="Flashcards 2" RuntimeType="Silverlight" Version="2.0.0.0" Genre="apps.normal" Author="Christoph Denzler" Description="A simple flashcards app" Publisher="FHNW, IMVS" PublisherID="{0763580d-6690-4c51-a1d2-00e825e4097d}">
     <IconPath IsRelative="true" IsResource="false">Images/ApplicationIcon.png</IconPath>

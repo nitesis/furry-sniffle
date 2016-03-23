@@ -29,6 +29,7 @@ namespace Flashcards21.ViewModels
         Downloader downloader;
 
         private const string serverAddress = "http://web.fhnw.ch/plattformen/mad/flashcards/";
+        private WebClient web = new WebClient();
 
         #region Possible modes for an available item: Available, Downloading, Initializing, Done
         internal enum ItemMode
@@ -177,7 +178,7 @@ namespace Flashcards21.ViewModels
         {
             IsDataLoaded = false;
             IsDownloadInProgress = true;
-            WebClient web = new WebClient();
+            //WebClient web = new WebClient();
             web.DownloadProgressChanged += new DownloadProgressChangedEventHandler(downloadProgress);
             web.OpenReadCompleted += new OpenReadCompletedEventHandler(readCompleted);
             web.OpenReadAsync(new Uri(serverAddress + "overview.xml"));
@@ -289,9 +290,22 @@ namespace Flashcards21.ViewModels
                 {
                     IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication();
                     storage.CreateDirectory(item.Filename);
+                    
+                    Stream zipInputStream = args.Result;
 
                     // unzip files into new directory.
-                    Unzip(args.Result, storage);
+                    try
+                    {
+                            Unzip(zipInputStream, storage);
+
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                    
+
+                       
                     // look index.xml and process its contents to create card box and cards.
                     ProcessXML(storage);
                     // remove index.xml file as it is now obsolete.
@@ -364,23 +378,29 @@ namespace Flashcards21.ViewModels
                 while (zipEntry != null)
                 {
                     String entryFileName = zipEntry.Name;
-                    // to remove the folder from the entry:- entryFileName = Path.GetFileName(entryFileName);
-                    // Optionally match entrynames against a selection list here to skip as desired.
-                    // The unpacked length is available in the zipEntry.Size property.
 
-                    byte[] buffer = new byte[4096];     // 4K is optimum
 
-                    // Manipulate the output filename here as desired.
-                    String fullZipToPath = Path.Combine(item.Filename, entryFileName);
-
-                    // Unzip file in buffered chunks. This is just as fast as unpacking to a buffer the full size
-                    // of the file, but does not waste memory.
-                    // The "using" will close the stream even if an exception occurs.
-                    using (IsolatedStorageFileStream file = storage.CreateFile(fullZipToPath))
+                    if (!String.IsNullOrEmpty(entryFileName))
                     {
-                        StreamUtils.Copy(zipFile, file, buffer);
+                        // to remove the folder from the entry:- entryFileName = Path.GetFileName(entryFileName);
+                        // Optionally match entrynames against a selection list here to skip as desired.
+                        // The unpacked length is available in the zipEntry.Size property.
+
+                        byte[] buffer = new byte[4096];     // 4K is optimum
+
+                        // Manipulate the output filename here as desired.
+                        String fullZipToPath = Path.Combine(item.Filename, entryFileName);
+
+                        // Unzip file in buffered chunks. This is just as fast as unpacking to a buffer the full size
+                        // of the file, but does not waste memory.
+                        // The "using" will close the stream even if an exception occurs.
+                        using (IsolatedStorageFileStream file = storage.CreateFile(fullZipToPath))
+                        {
+                            StreamUtils.Copy(zipFile, file, buffer);
+                        }
                     }
                     zipEntry = zipFile.GetNextEntry();
+
                 }
             }
         }
