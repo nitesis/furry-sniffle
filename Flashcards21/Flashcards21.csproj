@@ -103,6 +103,7 @@
     <Compile Include="Data\DAL.cs" />
     <Compile Include="Data\IStorage.cs" />
     <Compile Include="Data\MockStorage.cs" />
+    <Compile Include="Data\Storage.cs" />
     <Compile Include="PersistentData\Storage.cs" />
     <Compile Include="ViewModels\CardboxViewModel.cs" />
     <Compile Include="ViewModels\DownloadableItemViewModel.cs" />
@@ -216,8 +217,8 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73">
-      <HintPath>packages\SharpZipLib.0.86.0\lib\11\ICSharpCode.SharpZipLib.dll</HintPath>
+    <Reference Include="ICSharpCode.SharpZipLib.Portable, Version=0.86.0.51803, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpZipLib.Portable.0.86.0.0003\lib\portable-net45+netcore45+wp8+win8+wpa81+MonoTouch+MonoAndroid+Xamarin.iOS10\ICSharpCode.SharpZipLib.Portable.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
