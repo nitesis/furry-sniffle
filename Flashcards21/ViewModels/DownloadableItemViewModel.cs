@@ -37,7 +37,7 @@ namespace Flashcards21.ViewModels
 
         public string Title { get; set; }
         public string Description { get; set; }
-        public string Filename { get; private set; }
+        public string Filename { get; set; }
 
         public string Size
         {

@@ -27,7 +27,14 @@ namespace Flashcards21.Views
 
         private void selectionChanged(object sender, SelectionChangedEventArgs e)
         {
+       
+            // If selected index is -1 (no selection) do nothing
+            if (DownloadListBox.SelectedIndex != -1)
+            {
+                int chosenCardboxID = DownloadListBox.SelectedIndex;
 
+                download.download(chosenCardboxID);
+            }
         }
 
         private void DownloadableCardboxes_Loaded(object sender, RoutedEventArgs e)

@@ -29,105 +29,19 @@ namespace Flashcards21.ViewModels
         Downloader downloader;
 
         private const string serverAddress = "http://web.fhnw.ch/plattformen/mad/flashcards/";
-
-        #region Possible modes for an available item: Available, Downloading, Initializing, Done
-        internal enum ItemMode
-        {
-            Available, Downloading, Initializing, Done
-        }
-        #endregion
-
-        #region AvailableItem representing a cardbox that was found on server but not on phone
-        public class AvailableItem : INotifyPropertyChanged
-        {
-            private bool hasImages;
-            private int size;
-
-            private const string SIZE = "Size: ";
-            private const string DOWNLOAD = "Downloading...";
-            private const string UNPACK = "Initializing...";
-            private const string DONE = "Download completed";
-            private ItemMode mode = ItemMode.Available;
-
-            public AvailableItem(String name, String description, String filename, int size, bool hasImages)
-            {
-                this.Name = name; this.Description = description; this.Filename = filename;
-                this.size = size; this.hasImages = hasImages;
-            }
-
-            public string Name { get; private set; }
-            public string Description { get; private set; }
-            public string Filename { get; private set; }
-
-            public string Size
-            {
-                get
-                {
-                    return (mode == ItemMode.Available) ? BytesToString(size) : "";
-                }
-            }
-
-            internal ItemMode Mode
-            {
-                get
-                {
-                    return mode;
-                }
-                set
-                {
-                    mode = value;
-                    NotifyPropertyChanged("SizeLabel");
-                    NotifyPropertyChanged("Size");
-                }
-            }
-
-            public String SizeLabel
-            {
-                get
-                {
-                    switch (mode)
-                    {
-                        case ItemMode.Available: return SIZE;
-                        case ItemMode.Downloading: return DOWNLOAD;
-                        case ItemMode.Initializing: return UNPACK;
-                        case ItemMode.Done: return DONE;
-                        default: return SIZE;
-                    }
-                }
-            }
-
-            public string HasImages
-            {
-                get
-                {
-                    return "../Images/images" + ((hasImages) ? "yes" : "no") + ".png";
-                }
-            }
-
-            public event PropertyChangedEventHandler PropertyChanged;
-            private void NotifyPropertyChanged(String propertyName)
-            {
-                PropertyChangedEventHandler handler = PropertyChanged;
-                if (null != handler)
-                {
-                    handler(this, new PropertyChangedEventArgs(propertyName));
-                }
-            }
-
-        }
-        #endregion
+        private WebClient web = new WebClient();
 
         public DownloadViewModel()
         {
             this.IsDataLoaded = false;
-            this.Items = new ObservableCollection<AvailableItem>();
+            this.Items = new ObservableCollection<DownloadableItemViewModel>();
         }
 
         #region Download of Overview
         /// <summary>
         /// A collection for ItemViewModel objects.
         /// </summary>
-        public ObservableCollection<AvailableItem> Items { get; private set; }
+        public ObservableCollection<DownloadableItemViewModel> Items { get; private set; }
         private bool _isDownloadInProgress = false;
 
         public bool IsDataLoaded
@@ -177,7 +91,7 @@ namespace Flashcards21.ViewModels
         {
             IsDataLoaded = false;
             IsDownloadInProgress = true;
-            WebClient web = new WebClient();
+            //WebClient web = new WebClient();
             web.DownloadProgressChanged += new DownloadProgressChangedEventHandler(downloadProgress);
             web.OpenReadCompleted += new OpenReadCompletedEventHandler(readCompleted);
             web.OpenReadAsync(new Uri(serverAddress + "overview.xml"));
@@ -211,7 +125,7 @@ namespace Flashcards21.ViewModels
                                     String images = reader.GetAttribute("Images");
                                     int bytes = Int32.Parse(size);
                                     bool img = Boolean.Parse(images);
-                                    AvailableItem item = new AvailableItem(name, desc, file, bytes, img);
+                                    DownloadableItemViewModel item = new DownloadableItemViewModel(name, desc, file, bytes, img);
                                     Items.Add(item);
                                 }
                                 break;
@@ -261,45 +175,58 @@ namespace Flashcards21.ViewModels
 
         internal void download(int index)
         {
-            AvailableItem item = Items[index];
+            DownloadableItemViewModel item = Items[index];
 
-            if (item.Mode == ItemMode.Available)
+            if (item.Mode == DownloadableItemViewModel.ItemMode.Available)
             {
                 downloader = new Downloader(item);
                 WebClient web = new WebClient();
                 web.OpenReadCompleted += new OpenReadCompletedEventHandler(downloader.itemReadCompleted);
-                item.Mode = ItemMode.Downloading;
+                item.Mode = DownloadableItemViewModel.ItemMode.Downloading;
                 web.OpenReadAsync(new Uri(serverAddress + item.Filename + ".zip"));
             }
         }
 
         class Downloader
         {
-            private AvailableItem item;
+            private DownloadableItemViewModel item;
 
-            public Downloader(AvailableItem item)
+            public Downloader(DownloadableItemViewModel item)
             {
                 this.item = item;
             }
 
             public void itemReadCompleted(object sender, OpenReadCompletedEventArgs args)
             {
-                item.Mode = ItemMode.Initializing;
+                item.Mode = DownloadableItemViewModel.ItemMode.Initializing;
                 if (!args.Cancelled && args.Error == null)
                 {
                     IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForApplication();
                     storage.CreateDirectory(item.Filename);
+                    
+                    Stream zipInputStream = args.Result;
 
                     // unzip files into new directory.
-                    Unzip(args.Result, storage);
+                    try
+                    {
+                            Unzip(zipInputStream, storage);
+
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                    
+
+                       
                     // look index.xml and process its contents to create card box and cards.
                     ProcessXML(storage);
                     // remove index.xml file as it is now obsolete.
                     storage.DeleteFile(Path.Combine(item.Filename, index));
                     // tell Overview that new cardbox is available
-                    App.ViewModel.newAvailableCardBox(item.Filename);
+                    App.ViewModel.newAvailableCardBox(item);
                 }
-                item.Mode = ItemMode.Done;
+                item.Mode = DownloadableItemViewModel.ItemMode.Done;
             }
 
             private void ProcessXML(IsolatedStorageFile storage)
@@ -364,23 +291,29 @@ namespace Flashcards21.ViewModels
                 while (zipEntry != null)
                 {
                     String entryFileName = zipEntry.Name;
-                    // to remove the folder from the entry:- entryFileName = Path.GetFileName(entryFileName);
-                    // Optionally match entrynames against a selection list here to skip as desired.
-                    // The unpacked length is available in the zipEntry.Size property.
 
-                    byte[] buffer = new byte[4096];     // 4K is optimum
 
-                    // Manipulate the output filename here as desired.
-                    String fullZipToPath = Path.Combine(item.Filename, entryFileName);
-
-                    // Unzip file in buffered chunks. This is just as fast as unpacking to a buffer the full size
-                    // of the file, but does not waste memory.
-                    // The "using" will close the stream even if an exception occurs.
-                    using (IsolatedStorageFileStream file = storage.CreateFile(fullZipToPath))
+                    if (!String.IsNullOrEmpty(entryFileName))
                     {
-                        StreamUtils.Copy(zipFile, file, buffer);
+                        // to remove the folder from the entry:- entryFileName = Path.GetFileName(entryFileName);
+                        // Optionally match entrynames against a selection list here to skip as desired.
+                        // The unpacked length is available in the zipEntry.Size property.
+
+                        byte[] buffer = new byte[4096];     // 4K is optimum
+
+                        // Manipulate the output filename here as desired.
+                        String fullZipToPath = Path.Combine(item.Filename, entryFileName);
+
+                        // Unzip file in buffered chunks. This is just as fast as unpacking to a buffer the full size
+                        // of the file, but does not waste memory.
+                        // The "using" will close the stream even if an exception occurs.
+                        using (IsolatedStorageFileStream file = storage.CreateFile(fullZipToPath))
+                        {
+                            StreamUtils.Copy(zipFile, file, buffer);
+                        }
                     }
                     zipEntry = zipFile.GetNextEntry();
+
                 }
             }
         }
